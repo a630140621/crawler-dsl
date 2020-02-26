@@ -4,7 +4,7 @@ const compile = require("../../crawler/cql/compile");
 
 
 describe("compile", () => {
-    it("compile.compile", () => {
+    it("compile.compile 1", () => {
         let cql = `
             # some comment
             set encoding=gb2312
@@ -27,6 +27,28 @@ describe("compile", () => {
             set: {
                 ENCODING: "gb2312"
             }
+        });
+    });
+
+    it("compile.compile 2", () => {
+        let cql = `
+            # 抓取 相关股票, 关联原因, 相关性
+            SELECT
+                text(css('.child-wrap table tbody tr td:nth-child(1)')) AS stock,
+                text(css('.child-wrap table tr td:nth-child(4) span span')) AS reason,
+                text(css('.child-wrap table tr td:nth-child(5)')) AS relate
+            FROM
+                https://www.yuncaijing.com/story/details/id_1287.html`;
+        expect(compile.compile(cql)).to.be.an("object").and.that.deep.equal({
+            from_urls: [
+                "https://www.yuncaijing.com/story/details/id_1287.html"
+            ],
+            select_script: {
+                stock: "text(css('.child-wrap table tbody tr td:nth-child(1)'))",
+                reason: "text(css('.child-wrap table tr td:nth-child(4) span span'))",
+                relate: "text(css('.child-wrap table tr td:nth-child(5)'))"
+            },
+            set: {}
         });
     });
 

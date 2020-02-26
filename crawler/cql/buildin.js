@@ -17,28 +17,47 @@ function wrapper($, script) {
         return $(selector);
     }
 
+    // @return ["text"]
     function text($_) {
-        return $_.text().trim();
+        let ret = [];
+        // 虽然下述是回调函数形式，但是是同步执行的
+        $_.each(function (i, elem) {
+            ret.push($(this).text().trim());
+        });
+        return ret;
     }
-
+    
+    // @return ["html"]
     function html($_) {
-        return $_.toString().trim();
+        let ret = [];
+        // 虽然下述是回调函数形式，但是是同步执行的
+        $_.each(function (i, elem) {
+            ret.push($(this).toString().trim());
+        });
+        return ret;
     }
 
     /**
-     * 使用正则表达式匹配文本内容，如果没传第二个参数，则全文匹配
+     * 使用正则表达式匹配文本内容，
+     * 如果没传第二个参数，则全文匹配，并返回匹配到的第一个值
+     * 如果传入第二个参数，则第二个参数必须是数组，对于每个元素执行一次匹配，返回匹配到的第一个值，若没匹配到则返回 ""
      * @param {RegExp} regex 正则表达式
-     * @param {String} text 
+     * @param {[String]} texts 
      * 
-     * @return 返回匹配的第一个字符串，之后考虑增加第三个参数来表示获取第几个匹配
+     * @return [""]
      */
-    function regex(regex, text) {
-        if (!text) text = $.html();
-        // let regex = new RegExp(regex_str);
-        let match = text.match(regex);
-        if (!match) return "";
-        return match[0];
+    function regex(regex, texts) {
+        if (!texts) texts = [$.html()];
+        let ret = [];
+        for (let text of texts) {
+            let match = text.match(regex);
+            if (!match) ret.push("");
+            else ret.push(match[0].trim());
+        }
+
+        return ret;
     }
+
 
     function runCodeWithBuildIn(func_str) {
         return Function(`return (${func_str})`)()(
@@ -48,7 +67,6 @@ function wrapper($, script) {
             html
         );
     }
-
 
     return runCodeWithBuildIn(`function(css, text, regex, html){ return ${raw(script)} }`);
 }

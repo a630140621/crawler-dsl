@@ -5,9 +5,14 @@ const argv = require("yargs")
     .example("$0 --cql 'SET ENCODING=gbk SELECT text(css('h1')) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html'")
     // .example("$0 --encoding gbk --select 'text(css('h1')) AS title' --url https://news.163.com/20/0217/13/F5JDV8GD000189FH.html")
     .option("cql", {
-        describe: "use cql to crawl specify website",
+        describe: "use cql to crawl specify url",
         required: true,
         nargs: 1
+    })
+    .option("first", {
+        describe: "return first match group for each url",
+        type: "boolean",
+        default: false
     })
     // .option("encoding", {
     //     describe: "specify encoding format",
@@ -37,7 +42,12 @@ async function crawl(cql) {
         let html = await download(url, {
             encoding: set.ENCODING
         });
-        ret.push(extract(html, select_script));
+        let matches = extract(html, select_script);
+        if (argv.first && matches.length > 0) {
+            ret.push(matches[0]);
+        } else {
+            ret.push(matches);
+        }
     }
 
     return ret;
