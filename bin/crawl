@@ -1,0 +1,47 @@
+#! /usr/bin/env node
+
+const argv = require("yargs")
+    .usage("Usage: $0 <command> [options]")
+    .example("$0 --cql 'SET ENCODING=gbk SELECT text(css('h1')) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html'")
+    // .example("$0 --encoding gbk --select 'text(css('h1')) AS title' --url https://news.163.com/20/0217/13/F5JDV8GD000189FH.html")
+    .option("cql", {
+        describe: "use cql to crawl specify website",
+        required: true,
+        nargs: 1
+    })
+    // .option("encoding", {
+    //     describe: "specify encoding format",
+    //     default: "utf8",
+    //     nargs: 1
+    // })
+    .help("h")
+    .alias("h", "help")
+    .epilog("copyright 2019")
+    .argv;
+
+const compile = require("../crawler/cql/compile");
+const download = require("../crawler/download");
+const extract = require("../crawler/extract");
+
+
+async function crawl(cql) {
+    let {
+        from_urls,
+        select_script,
+        set
+    } = compile(cql);
+
+    let ret = [];
+    // 目前先使用同步下载的方式
+    for (let url of from_urls) {
+        let html = await download(url, {
+            encoding: set.ENCODING
+        });
+        ret.push(extract(html, select_script));
+    }
+
+    return ret;
+}
+
+
+crawl(argv.cql).then(console.log).catch(console.error);

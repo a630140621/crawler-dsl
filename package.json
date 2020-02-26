@@ -1,0 +1,41 @@
+{
+  "name": "crawler-cql",
+  "version": "0.1.0",
+  "description": "crawler with cql",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "bin": {
+    "crawl": "./bin/crawl"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a630140621/crawler-cql.git"
+  },
+  "keywords": [
+    "cql"
+  ],
+  "author": "630140621@qq.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/a630140621/crawler-cql/issues"
+  },
+  "homepage": "https://github.com/a630140621/crawler-cql#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "jest": "^25.1.0"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "iconv-lite": "^0.5.1",
+    "request": "^2.88.2",
+    "request-promise-native": "^1.0.8",
+    "yargs": "^15.1.0"
+  }
+}
