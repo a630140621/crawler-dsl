@@ -2,6 +2,12 @@
 
 使用cql实现爬虫
 
+## 安装
+
+```bash
+npm install a630140621/crawler-dsl -g
+```
+
 ## 基础示例
 
 ### 抓取详情页（单页）
