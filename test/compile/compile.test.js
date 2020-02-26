@@ -1,9 +1,34 @@
 process.env.NODE_ENV = "unittest";
 const expect = require("chai").expect;
-const compile = require("../crawler/cql/compile");
+const compile = require("../../crawler/cql/compile");
 
 
 describe("compile", () => {
+    it("compile.compile", () => {
+        let cql = `
+            // some comment
+            set encoding=gb2312
+            select 
+                text(css('#title')) AS title,
+                html(css('#content')) as content
+            // other comment
+            from
+                https://news.163.com/20/0217/13/F5JDV8GD000189FH.html
+        `;
+
+        expect(compile.compile(cql)).to.be.an("object").and.that.deep.equal({
+            from_urls: "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",
+            select_script: {
+                title: "text(css('#title'))",
+                content: "html(css('#content'))"
+            },
+            set: {
+                ENCODING: "gb2312"
+            }
+        });
+    });
+
+
     it("compile.getUrlListFromFROMSection should return list with length 1", () => {
         let from = "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html";
         expect(compile.getUrlListFromFROMSection(from)).to.be.an("array")

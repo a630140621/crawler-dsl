@@ -1,10 +1,17 @@
-function compile(string) {
-    string = string.trim().replace(/\s+/g, " "); // 去除前后空格符以及多余的空格符
+const comment = require("./comment");
+
+
+function compile(cql) {
+    // 去除注释
+    let _cql = comment.removeComment(cql);
+    // 去除前后空格符以及多余的空格符
+    _cql = _cql.trim().replace(/\s+/g, " ");
+
     let {
         SELECT,
         FROM,
         SET
-    } = getSplitList(string, ["SELECT", "FROM", "SET"]);
+    } = getSplitList(_cql, ["SELECT", "FROM", "SET"]);
 
     let urls = getUrlListFromFROMSection(FROM);
     let select_script = splitSELECT(SELECT);
@@ -141,6 +148,7 @@ if (process.env.NODE_ENV === "unittest") {
         splitSELECT,
         getSplitList,
         getUrlListFromFROMSection,
-        splitSET
+        splitSET,
+        compile
     };
 }
