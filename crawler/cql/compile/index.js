@@ -1,4 +1,7 @@
 const comment = require("./comment");
+const from = require("./from");
+const set = require("./set");
+const select = require("./select");
 
 
 function compile(cql) {
@@ -13,21 +16,17 @@ function compile(cql) {
         SET
     } = getSplitList(_cql, ["SELECT", "FROM", "SET"]);
 
-    let urls = getUrlListFromFROMSection(FROM);
-    let select_script = splitSELECT(SELECT);
-    let set = splitSET(SET);
-
     return {
-        from_urls: urls,
-        select_script,
-        set
+        from_urls: from.getUrlList(FROM),
+        select_script: select.getSelect(SELECT),
+        set: set.getSet(SET)
     };
 }
 
 
 /**
  * @param {string} cql 
- * @param {[string]} keywords []
+ * @param {[string]} keywords
  * 
  * @return {[Object]} [{ [keyword]: "" }]
  * eg.
@@ -37,7 +36,7 @@ function compile(cql) {
  *      FROM: "xxxx"
  *  }
  */
-function getSplitList(cql, keywords = []) {
+function getSplitList(cql, keywords) {
     // 将 cql 按照 keywords 分解成 区块
     let sections_regex = new RegExp(`${keywords.join("|")}\\s+`, "ig"); // 需要作为一个区块单独处理
     let match;
@@ -66,89 +65,12 @@ function getSplitList(cql, keywords = []) {
 }
 
 
-/**
- * 切分 select section
- * @param {string} select SELECT 字符串
- * 
- * eg1:
- *  splitSELECT("text(css("#epContentLeft")) AS title, html(css("#endText")) AS content")
- *  return: {
- *      title: "text(css("#epContentLeft"))",
- *      content: "html(css("#endText"))"
- *  }
- */
-function splitSELECT(select) {
-    let stack = []; // 用于匹配成对的 ()
-    let pairs = [];
-    let token = "";
-    let i = 0;
-    while (i < select.length) {
-        let ch = select[i];
-        if (ch === "(") stack.push("(");
-        if (ch === ")") stack.pop(")");
-        if (ch === " " && select.slice(i, i + 4) === " AS ") { // 是 token
-            i += 4;
-            pairs.push(token);
-            token = "";
-            continue;
-        }
-        i += 1;
-        if (ch === "," && stack.length === 0) {
-            pairs.push(token);
-            token = "";
-            continue;
-        }
-        if (ch === " " && token  === "") { // 去掉开头的空格
-            continue;
-        }
-        token += ch;
-    }
-    pairs.push(token); // 增加最后一个值
-
-    let ret = {};
-    for (let index = 0; index < pairs.length; index += 2) {
-        if (index % 2 == 0) { // 偶数
-            ret[pairs[index + 1]] = pairs[index];
-        }
-    }
-    
-    return ret;
-}
-
-
-/**
- * @param {String} cql ENCODING=gbk, ENGINE=puppeteer
- * 
- * @return {Object} { ENCODING: "gbk", ENGINE: "puppeteer" }
- */
-function splitSET(cql) {
-    if (!cql) return {};
-    let ret = {};
-    let secs = cql.split(/,\s*/);
-    for (let sec of secs) {
-        let item = sec.split("=");
-        ret[item[0].toUpperCase()] = item[1];
-    }
-    return ret;
-}
-
-
-/**
- * 从 from 字句中提取 url 列表
- * @param {string} from 
- */
-function getUrlListFromFROMSection(from) {
-    return from.split(/,\s*/);
-}
-
 module.exports = compile;
 
+// 为了 coverage 测试
 if (process.env.NODE_ENV === "unittest") {
     module.exports = {
-        splitSELECT,
         getSplitList,
-        getUrlListFromFROMSection,
-        splitSET,
         compile
     };
 }
