@@ -13,10 +13,14 @@ module.exports = async function crawl(cql) {
     let ret = [];
     // 目前先使用同步下载的方式
     for (let url of from_urls) {
+        let item = {
+            url
+        };
         let html = await download(url, {
             encoding: set.ENCODING
         });
-        ret.push(extract(html, select_script));
+        item.extract = extract(html, select_script);
+        ret.push(item);
     }
 
     return ret;

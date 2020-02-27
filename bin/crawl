@@ -9,11 +9,6 @@ const argv = require("yargs")
         required: true,
         nargs: 1
     })
-    .option("first", {
-        describe: "return first match group for each url",
-        type: "boolean",
-        default: false
-    })
     // .option("encoding", {
     //     describe: "specify encoding format",
     //     default: "utf8",
@@ -24,34 +19,33 @@ const argv = require("yargs")
     .epilog("copyright 2019")
     .argv;
 
-const compile = require("../crawler/cql/compile");
-const download = require("../crawler/download");
-const extract = require("../crawler/extract");
+
+const crawl = require("../crawler/index");
+
+// const compile = require("../crawler/cql/compile");
+// const download = require("../crawler/download");
+// const extract = require("../crawler/extract");
+
+// async function crawl(cql) {
+//     let {
+//         from_urls,
+//         select_script,
+//         set
+//     } = compile(cql);
+
+//     let ret = [];
+//     // 目前先使用同步下载的方式
+//     for (let url of from_urls) {
+//         let html = await download(url, {
+//             encoding: set.ENCODING
+//         });
+//         ret.push(extract(html, select_script));
+//     }
+
+//     return ret;
+// }
 
 
-async function crawl(cql) {
-    let {
-        from_urls,
-        select_script,
-        set
-    } = compile(cql);
-
-    let ret = [];
-    // 目前先使用同步下载的方式
-    for (let url of from_urls) {
-        let html = await download(url, {
-            encoding: set.ENCODING
-        });
-        let matches = extract(html, select_script);
-        if (argv.first && matches.length > 0) {
-            ret.push(matches[0]);
-        } else {
-            ret.push(matches);
-        }
-    }
-
-    return ret;
-}
-
-
-crawl(argv.cql).then(console.log).catch(console.error);
+crawl(argv.cql).then(ret => {
+    console.log(JSON.stringify(ret, null, 4));
+}).catch(console.error);
