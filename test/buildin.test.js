@@ -44,4 +44,12 @@ describe("buildin", () => {
         let script = "html(css('h1'))";
         expect(buildin.evalBuildInScript($, script)).to.be.an("array").have.length(1).and.that.include("<h1>微视频 | 愿得此身长报国</h1>");
     });
+    it("extract video src use src() and css()", () => {
+        let script = "src(css('.post_body p img'))";
+        expect(buildin.evalBuildInScript($, script)).to.be.an("array").have.length(6);
+    });
+    it("extract video src use attr() and css()", () => {
+        let script = "attr(css('.post_body p img'), 'src')";
+        expect(buildin.evalBuildInScript($, script)).to.be.an("array").have.length(6);
+    });
 });

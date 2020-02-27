@@ -17,6 +17,23 @@ function wrapper($, script) {
         return $(selector);
     }
 
+    // 获取节点属性
+    function attr($_, attribute) {
+        let ret = [];
+        $_.each(function (i, elem) {
+            ret.push($(this).attr(attribute));
+        });
+        return ret;
+    }
+
+    function href($_) {
+        return attr($_, "href");
+    }
+
+    function src($_) {
+        return attr($_, "src");
+    }
+
     // @return ["text"]
     function text($_) {
         let ret = [];
@@ -26,7 +43,7 @@ function wrapper($, script) {
         });
         return ret;
     }
-    
+
     // @return ["html"]
     function html($_) {
         let ret = [];
@@ -64,11 +81,14 @@ function wrapper($, script) {
             css,
             text,
             regex,
-            html
+            html,
+            attr,
+            href,
+            src
         );
     }
 
-    return runCodeWithBuildIn(`function(css, text, regex, html){ return ${raw(script)} }`);
+    return runCodeWithBuildIn(`function(css, text, regex, html, attr, href, src){ return ${raw(script)} }`);
 }
 
 /**
