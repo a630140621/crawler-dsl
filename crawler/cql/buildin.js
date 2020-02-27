@@ -1,3 +1,6 @@
+const debug = require("debug")("cql:compile:buildin");
+
+
 // 将 字符串中的 \ 转换成 \\ 
 function raw(string) {
     let start = false;
@@ -23,6 +26,8 @@ function wrapper($, script) {
         $_.each(function (i, elem) {
             ret.push($(this).attr(attribute));
         });
+
+        debug(`run buildin func attr ret = ${ret}`);
         return ret;
     }
 
@@ -41,6 +46,8 @@ function wrapper($, script) {
         $_.each(function (i, elem) {
             ret.push($(this).text().trim());
         });
+
+        debug(`run buildin func text ret = ${ret}`);
         return ret;
     }
 
@@ -51,6 +58,8 @@ function wrapper($, script) {
         $_.each(function (i, elem) {
             ret.push($(this).toString().trim());
         });
+
+        debug(`run buildin func html ret = ${ret}`);
         return ret;
     }
 
@@ -72,6 +81,7 @@ function wrapper($, script) {
             else ret.push(match[0].trim());
         }
 
+        debug(`run buildin func regex ret = ${ret}`);
         return ret;
     }
 
@@ -100,6 +110,6 @@ function wrapper($, script) {
  *  evalBuildInScript($, "text(css("#id"))")
  */
 exports.evalBuildInScript = function ($, script) {
-    // console.log(`execute script: ${script}`);
+    debug(`run script ${script}`);
     return wrapper($, script);
 };

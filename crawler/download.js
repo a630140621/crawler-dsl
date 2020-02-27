@@ -1,3 +1,4 @@
+const debug = require("debug")("cql:download");
 const request = require("request-promise-native");
 const iconv = require("iconv-lite");
 
@@ -7,6 +8,7 @@ module.exports = async function (url, {
     headers = {},
     encoding = "utf8",
 } = {}) {
+    debug(`direct download url = ${url} with timeout = ${timeout} encoding = ${encoding} headers = \n${JSON.stringify(headers, null, 4)}`);
     if (!iconv.encodingExists(encoding)) {
         throw `iconv does not support encoding [${encoding}]`;
     }
@@ -21,4 +23,4 @@ module.exports = async function (url, {
     });
 
     return iconv.decode(buf, encoding);
-}
+};

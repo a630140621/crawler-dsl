@@ -29,6 +29,7 @@
   "homepage": "https://github.com/a630140621/crawler-cql#readme",
   "devDependencies": {
     "chai": "^4.2.0",
+    "debug": "^4.1.1",
     "jest": "^25.1.0"
   },
   "dependencies": {

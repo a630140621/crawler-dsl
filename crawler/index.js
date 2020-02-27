@@ -1,26 +1,26 @@
+const debug = require("debug")("cql");
 const compile = require("./cql/compile");
 const download = require("./download");
 const extract = require("./extract");
 
 
 module.exports = async function crawl(cql) {
+    debug(`before compile cql = ${cql}`);
     let {
         from_urls,
         select_script,
         set
     } = compile(cql);
 
+    // 使用同步下载（不使用异步主要是因为 puppeteer 如果同时开很多会非常消耗性能）
     let ret = [];
-    // 目前先使用同步下载的方式
     for (let url of from_urls) {
-        let item = {
-            url
-        };
-        let html = await download(url, {
-            encoding: set.ENCODING
+        ret.push({
+            url,
+            extract: extract(await download(url, {
+                encoding: set.ENCODING
+            }), select_script)
         });
-        item.extract = extract(html, select_script);
-        ret.push(item);
     }
 
     return ret;
