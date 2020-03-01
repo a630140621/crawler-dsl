@@ -13,7 +13,7 @@ npm install a630140621/crawler-dsl -g
 ### 抓取详情页（单页）
 
 ```bash
-crawl --cql 'SET ENCODING=gbk SELECT text(css('h1')) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html'
+crawl --cql 'SET ENCODING=gbk SELECT text(css("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html'
 # [ { url: 'https://news.163.com/20/0217/13/F5JDV8GD000189FH.html', extract: [{ title: '微视频 | 愿得此身长报国' }] }]
 ```
 
@@ -66,6 +66,42 @@ SELECT
     text(css('.child-wrap table tr td:nth-child(5)')) AS relate
 FROM
     https://www.yuncaijing.com/story/details/id_1287.html
+```
+
+### 自动翻页
+
+* 情景1，翻页并提取内容，并将提取到的内容和 `SELECT` 中指定的字段合并（主要用在两页之间内容有关联）；
+* 情景2，翻页后提取到的内容，不和之前的内容合并；
+
+#### 翻页不合并
+
+以 https://www.esjzone.cc/forum/1546618252/57514.html 为例
+
+```sql
+SELECT
+    text($('h3')) AS title,
+    text($('.forum-content')) AS text
+FROM
+    https://www.esjzone.cc/forum/1546618252/57514.html
+NEXT URL
+    href($('.btn-next'))
+LIMIT 100
+```
+
+> 当 `NEXT URL` 后为空或到达 `LIMIT` 时，停止抓取。
+
+#### 翻页合并
+
+```sql
+SELECT
+    text($('h3')) AS title,
+    text($('.forum-content')) AS content
+FROM
+    https://www.esjzone.cc/forum/1546618252/57514.html
+NEXT URL
+    href($('.btn-next'))
+MERGE content
+LIMIT 3
 ```
 
 [更多语法参考](docs/grammer.md)
