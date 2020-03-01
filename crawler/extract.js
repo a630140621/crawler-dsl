@@ -11,18 +11,25 @@ module.exports = function (html, select_script) {
         decodeEntities: false
     });
 
-    let combine = {}; // key -> []
+    let combine = {};
     for (let [key, script] of Object.entries(select_script)) {
         combine[key] = buildin.evalBuildInScript($, script);
     }
 
+    let is_zip = true; // 是否需要自动 zip
     // combine 键对应值中数组长度的最大值
     let combine_max_length = 0;
     for (let value of Object.values(combine)) {
+        if (!Array.isArray(value)) {
+            is_zip = false;
+            break;
+        }
         if (value.length > combine_max_length) combine_max_length = value.length;
     }
 
-    // zip
+    // 提取的内容不需要 zip 操作
+    if (!is_zip) return combine;
+    // 如果返回的是数组，则需要 zip
     let ret = [];
     for (let i = 0; i < combine_max_length; i++) {
         let item = {};

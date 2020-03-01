@@ -16,7 +16,7 @@ FROM
 // [
 //     {
 //         "url": "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",
-//         "extract": [
+//         "select": [
 //             {
 //                 "title": "微视频 | 愿得此身长报国",
 //                 "pubdate": "2020-02-17 13:22:54"
@@ -41,7 +41,7 @@ FROM
 // [
 //     {
 //         "url": "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",
-//         "extract": [
+//         "select": [
 //             {
 //                 "title": "微视频 | 愿得此身长报国",
 //                 "pubdate": "2020-02-17 13:22:54"
@@ -50,7 +50,7 @@ FROM
 //     },
 //     {
 //         "url": "https://news.163.com/20/0225/11/F67P1C0Q000189FH.html",
-//         "extract": [
+//         "select": [
 //             {
 //                 "title": "世卫组织强调新冠肺炎疫情仍未构成“大流行病”",
 //                 "pubdate": "2020-02-25 11:01:06"

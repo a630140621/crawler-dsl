@@ -17,7 +17,7 @@ module.exports = async function crawl(cql) {
     for (let url of from_urls) {
         ret.push({
             url,
-            extract: extract(await download(url, {
+            select: extract(await download(url, {
                 encoding: set.ENCODING
             }), select_script)
         });
