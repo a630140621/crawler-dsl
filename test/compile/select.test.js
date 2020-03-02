@@ -40,4 +40,35 @@ describe("compile/select", () => {
                 e: "f"
             });
     });
+    it("select.getSelect with one param but without AS", () => {
+        let _select = `text($('h3'))`;
+        expect(select.getSelect(_select)).to.be.an("object")
+            .that.deep.equal({
+                "text($('h3'))": "text($('h3'))"
+            });
+    });
+    it("select.getSelect with two params but without AS", () => {
+        let _select = `text($('h3')), html($$('#content'))`;
+        expect(select.getSelect(_select)).to.be.an("object")
+            .that.deep.equal({
+                "text($('h3'))": "text($('h3'))",
+                "html($$('#content'))": "html($$('#content'))"
+            });
+    });
+    it("select.getSelect one have AS one not AS", () => {
+        let _select = `text($('h3')) as title,  html($$('#content'))`;
+        expect(select.getSelect(_select)).to.be.an("object")
+            .that.deep.equal({
+                "title": "text($('h3'))",
+                "html($$('#content'))": "html($$('#content'))"
+            });
+    });
+    it("select.getSelect one have AS one not AS and have , on regex()", () => {
+        let _select = `text($('h3')) as title, regex('demo',  $$('#content'))`;
+        expect(select.getSelect(_select)).to.be.an("object")
+            .that.deep.equal({
+                "title": "text($('h3'))",
+                "regex('demo',  $$('#content'))": "regex('demo',  $$('#content'))"
+            });
+    });
 });

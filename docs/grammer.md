@@ -1,5 +1,22 @@
 # 语法
 
+例子：
+
+```sql
+SET
+    DOWNLOAD_TIMEOUT=-1,
+    DOWNLOAD_ENGINE=puppeteer
+SELECT
+    text($('h3')) AS title,
+    text($('.forum-content')) AS content
+FROM
+    https://www.esjzone.cc/forum/1546618252/57514.html
+NEXT URL
+    href($('.btn-next'))
+MERGE content
+LIMIT 3
+```
+
 ## 注释
 
 cql 中使用 `#` 开头的为注释
@@ -11,6 +28,16 @@ cql 中使用 `#` 开头的为注释
 * ENCODING -> 下载完html后使用指定的格式进行解码，默认为 `utf8`
 * DOWNLOAD_ENGINE -> 设置下载引擎，默认是直接下载，可以选择使用 `puppeteer`
 * DOWNLOAD_TIMEOUT -> 下载url的超时设置，默认为 `30s`，单位 __毫秒__（`-1`表示不限超时时间，如果设置了一个非法的值，比如字符串，会被无视）
+
+## SELECT
+
+用来选择需要提取的内容
+
+### AS
+
+重命名待提取内容的返回字段
+
+## 
 
 ## 内置函数
 
@@ -79,4 +106,3 @@ FROM AREA (
 * 未想到更合适的 `cql` 表述
 
 虽然如果选择器选择到的内容有错位会导致返回异常，但是由于上述原因，暂时没有实现上述方案，而仅仅采用了目前 `zip` 的方式。
-
