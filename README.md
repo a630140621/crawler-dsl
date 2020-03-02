@@ -141,6 +141,16 @@ MERGE content
 LIMIT 3
 ```
 
+#### NEXT URL vs FROM
+
+`NEXT URL` 和 `FROM` 语句有很多相似的地方，但实际上他们是完全不同的。
+
+虽然他们都可以接受一个 url 列表或者一个 `SELECT` 子句以实现抓取一批 url 的功能，
+然而 `FROM` 子句中的 url 列表是异步抓取的（暂时是同步, 之后修改），所以性能较高；
+`NEXT URL` 后如果跟一个 url 列表则列表中的 url 是按照顺序抓取的；此外 `NEXT URL` 还可以跟一个 `MERGE` 子句用来合并指定的字段。
+
+> 如果有一些地址需要同步抓取，则也可以使用 `NEXT URL`
+
 [更多语法参考](docs/grammer.md)
 
 ## 测试
