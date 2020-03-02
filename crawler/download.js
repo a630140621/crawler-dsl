@@ -49,18 +49,17 @@ async function downloadWithRequest(url, {
 }
 
 async function downloadWithPuppeteer(url, {
-    timeout = 30000,
+    timeout = 30000
 }) {
-    debug(`download url ${url} use puppeteer`);
-    const browser = await puppeteer.launch({
-        headless: false
-    });
+    debug(`before download url ${url} use puppeteer`);
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(url, {
-        timeout,
+        timeout: timeout === -1 ? 0 : timeout,
         // 应该用 "domcontentloaded" 会更好些，但是目前只有一个网站需要在 load 之后在获取内容，后续如果有更多需要使用 puppeteer 下载，在测试后考虑提供一个 SET 来修改此处配置
         // waitUntil: "domcontentloaded"
         waitUntil: "load"
     });
+    debug(`after download url ${url} use puppeteer`);
     return await page.content();
 }

@@ -105,6 +105,9 @@ FROM
 以 https://www.esjzone.cc/forum/1546618252/57514.html 为例
 
 ```sql
+SET
+    DOWNLOAD_TIMEOUT=-1,
+    DOWNLOAD_ENGINE=puppeteer
 SELECT
     text($('h3')) AS title,
     text($('.forum-content')) AS text
@@ -120,6 +123,9 @@ LIMIT 100
 #### 翻页合并
 
 ```sql
+SET
+    DOWNLOAD_TIMEOUT=-1,
+    DOWNLOAD_ENGINE=puppeteer
 SELECT
     text($('h3')) AS title,
     text($('.forum-content')) AS content

@@ -18,7 +18,9 @@ module.exports = async function crawl(cql) {
         ret.push({
             url,
             select: extract(await download(url, {
-                encoding: set.ENCODING
+                encoding: set.ENCODING,
+                timeout: set.DOWNLOAD_TIMEOUT,
+                engine: set.DOWNLOAD_ENGINE
             }), select_script)
         });
     }
