@@ -10,11 +10,11 @@ exports.getSet = function(set) {
     let ret = {};
     let secs = set.split(/,\s*/);
     for (let sec of secs) {
-        let item = sec.split("=");
+        let item = sec.split(/\s*=\s*/);
         let key = item[0].toUpperCase();
         if (key === "DOWNLOAD_TIMEOUT") {
             let timeout = Number(item[1]);
-            if (Number.isNaN(timeout)) timeout = 30000;
+            if (Number.isNaN(timeout)) continue;
             ret[key] = timeout;
             continue;
         }
