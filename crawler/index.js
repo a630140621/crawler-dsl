@@ -1,4 +1,4 @@
-const debug = require("debug")("cql");
+const debug = require("debug")("crawler");
 const compile = require("./cql/compile");
 const download = require("./download");
 const extract = require("./extract");

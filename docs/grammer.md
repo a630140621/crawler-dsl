@@ -55,12 +55,13 @@ eg3.
 
     FROM (
         SELECT 
-            $$("#js_top_news a") AS url
+            href($$("#js_top_news a")) AS url
         FROM https://news.163.com
     )
 
-1. 和 sql 相同，作为子查询的 `SELECT` 应仅返回一列;
-2. `()` 不能省略。
+1. 和 sql 相同，作为子查询的 `SELECT` 应仅返回一列；
+2. `()` 不能省略；
+3. 子查询和指定 url 不能同时存在。
 
 > 抓取源的选择计划有两种，一种是 __直接指定 url__，另一种是 __从 url 对应页面中选择(选择器)指定的区域__；目前仅实现第一种。
 

@@ -62,7 +62,7 @@ describe("crawl", () => {
         });
     });
 
-    it("crawl use subselect", async () => {
+    it("crawl use subselect and do not use puppeteer", async () => {
         download
             .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/news.163.com.html"), {
                 encoding: "utf8"
@@ -98,6 +98,79 @@ describe("crawl", () => {
                 title: "胡锡进:若这一步走不好 中国付出的巨大代价都白费",
                 pubdate: "2020-03-03 10:17:57",
                 origin: "环球网"
+            }
+        });
+    });
+
+    it("crawl use subselect and use puppeteer engine", async () => {
+        download
+            .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/news.163.com.html"), {
+                encoding: "utf8"
+            }))
+            .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/F6Q9DP77000189FH.html"), {
+                encoding: "utf8"
+            }))
+            .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/F6PNBC6R0001899O.html"), {
+                encoding: "utf8"
+            }));
+        let ret = await crawl(`
+                set download_engine=puppeteer
+                select 
+                    text($("h1")) AS title, 
+                    regex(/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/, text($(".post_time_source"))) AS pubdate,
+                    text($("#ne_article_source")) AS origin
+                from (
+                    select href($$("#js_top_news h2 a")) from https://news.163.com
+                )
+            `);
+        
+        expect(ret).to.be.an("array").which.have.length(2);
+        expect(ret[0]).to.be.deep.equal({
+            url: "https://news.163.com/20/0303/15/F6Q9DP77000189FH.html",
+            select: {
+                title: "习近平为何此时考察战疫科研攻关",
+                pubdate: "2020-03-03 15:33:50",
+                origin: "新华网"
+            }
+        });
+        expect(ret[1]).to.be.deep.equal({
+            url: "https://news.163.com/20/0303/10/F6PNBC6R0001899O.html",
+            select: {
+                title: "胡锡进:若这一步走不好 中国付出的巨大代价都白费",
+                pubdate: "2020-03-03 10:17:57",
+                origin: "环球网"
+            }
+        });
+    });
+
+    it("crawl use subselect and from subselect use $()", async () => {
+        download
+            .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/news.163.com.html"), {
+                encoding: "utf8"
+            }))
+            .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/F6Q9DP77000189FH.html"), {
+                encoding: "utf8"
+            }))
+            .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/F6PNBC6R0001899O.html"), {
+                encoding: "utf8"
+            }));
+        let ret = await crawl(`
+                select 
+                    text($("h1")) AS title, 
+                    regex(/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/, text($(".post_time_source"))) AS pubdate,
+                    text($("#ne_article_source")) AS origin
+                from (
+                    select href($("#js_top_news h2 a")) from https://news.163.com
+                )
+            `);
+        
+        expect(ret).to.be.an("array").which.have.length(1);
+        expect(ret[0]).to.be.deep.equal({
+            url: "https://news.163.com/20/0303/15/F6Q9DP77000189FH.html",
+            select: {
+                title: "习近平为何此时考察战疫科研攻关",
+                pubdate: "2020-03-03 15:33:50",
+                origin: "新华网"
             }
         });
     });
