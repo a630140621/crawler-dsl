@@ -99,7 +99,7 @@ async function* getHtmlsSync(urls, options) {
         try {
             html = await download(url, options);
         } catch (error) {
-            console.error(error);
+            debug(`download url ${url} have some error = ${error}`);
         }
         yield {
             url,
