@@ -95,6 +95,39 @@ FROM
     https://www.yuncaijing.com/story/details/id_1287.html
 ```
 
+### 列表->详情
+
+以 https://news.163.com 为例
+
+```bash
+SET ENCODING=gbk
+SELECT
+    text($("h1")) AS title,
+    regex(/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/, text($(".post_time_source"))) AS pubdate,
+    text($("#ne_article_source")) AS origin
+FROM (
+    SELECT href($$("#js_top_news h2 a")) FROM https://news.163.com
+)
+# [
+#     {
+#         url: "https://news.163.com/20/0303/15/F6Q9DP77000189FH.html",
+#         select: {
+#             title: "习近平为何此时考察战疫科研攻关",
+#             pubdate: "2020-03-03 15:33:50",
+#             origin: "新华网"
+#         }
+#     },
+#     {
+#         url: "https://news.163.com/20/0303/10/F6PNBC6R0001899O.html",
+#         select: {
+#             title: "胡锡进:若这一步走不好 中国付出的巨大代价都白费",
+#             pubdate: "2020-03-03 10:17:57",
+#             origin: "环球网"
+#         }
+#     }
+# ]
+```
+
 ### 自动翻页
 
 * 情景1，翻页并提取内容，并将提取到的内容和 `SELECT` 中指定的字段合并（主要用在两页之间内容有关联）；
