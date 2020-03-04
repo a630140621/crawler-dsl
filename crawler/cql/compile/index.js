@@ -2,6 +2,7 @@ const comment = require("./comment");
 const from = require("./from");
 const set = require("./set");
 const select = require("./select");
+const Trie = require("../../../lib/Trie.class");
 
 
 function compile(cql) {
@@ -17,7 +18,7 @@ function compile(cql) {
     } = getSplitList(_cql, ["SELECT", "FROM", "SET"]);
 
     return {
-        from_urls: from.getUrlList(FROM),
+        from: from.handleFrom(FROM), // {subselect: "", urls: []}
         select_script: select.getSelect(SELECT),
         set: set.getSet(SET)
     };
@@ -38,29 +39,47 @@ function compile(cql) {
  */
 function getSplitList(cql, keywords) {
     // 将 cql 按照 keywords 分解成 区块
-    let sections_regex = new RegExp(`${keywords.join("|")}\\s+`, "ig"); // 需要作为一个区块单独处理
-    let match;
-    let list = [],
-        item = {}; // {keywords: "", start_index: int, end_index: int}
-    while ((match = sections_regex.exec(cql)) !== null) {
-        if ("keyword" in item) item["end_index"] = match["index"];
-        if ("end_index" in item) {
-            list.push(item);
+    let trie = new Trie(keywords.map(keyword => keyword.toUpperCase()));
+    let i = 0;
+    let stack = []; // 匹配 ()
+    let token = "";
+    let tokens = []; // "keyword1", "xxx", "keyword2", "xxxx", ...
+    outter:
+    while (i < cql.length) {
+        let ch = cql[i];
+        if (ch === "(") stack.push("(");
+        if (ch === ")") stack.pop();
+        if (ch === " " && token === "") { // 去除多余的空格
+            i += 1;
+            continue;
         }
-        item = {
-            keyword: match[0].toUpperCase(),
-            start_index: sections_regex.lastIndex
-        };
-    }
-    item.end_index = cql.length;
-    list.push(item);
+        if (stack.length === 0 && trie.startsWith(ch.toUpperCase())) { // 不在 () 中，且当前字母是关键词的开头
+            let keywords = trie.getStartsWith(ch.toUpperCase());
+            for (let keyword of keywords) { // 所有可能的关键词
+                let word = cql.slice(i, i + keyword.length);
+                if (word.toUpperCase() === keyword && cql[i + keyword.length] === " ") { // 是关键词
+                    if (token) {
+                        tokens.push(token);
+                        token = "";
+                    }
+                    tokens.push(keyword);
+                    i += keyword.length;
+                    continue outter;
+                }
+            }
+            
+        }
 
-    // 提取 区块
+        token += ch;
+        i += 1;
+    }
+    tokens.push(token);
+    
+    // combine
     let ret = {};
-    for (let item of list) {
-        ret[item["keyword"].trim()] = cql.slice(item["start_index"], item["end_index"]).trim();
+    for (let i = 0; i < tokens.length; i += 2) {
+        ret[tokens[i]] = tokens[i + 1].trimRight();
     }
-
     return ret;
 }
 

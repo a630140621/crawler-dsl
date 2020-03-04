@@ -37,7 +37,32 @@ cql 中使用 `#` 开头的为注释
 
 重命名待提取内容的返回字段
 
-## 
+## FROM
+
+用于指定抓取源。
+
+eg1.
+
+    FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html
+
+eg2.
+
+    FROM
+        https://news.163.com/20/0217/13/F5JDV8GD000189FH.html,
+        https://news.163.com/20/0225/11/F67P1C0Q000189FH.html
+
+eg3.
+
+    FROM (
+        SELECT 
+            $$("#js_top_news a") AS url
+        FROM https://news.163.com
+    )
+
+1. 和 sql 相同，作为子查询的 `SELECT` 应仅返回一列;
+2. `()` 不能省略。
+
+> 抓取源的选择计划有两种，一种是 __直接指定 url__，另一种是 __从 url 对应页面中选择(选择器)指定的区域__；目前仅实现第一种。
 
 ## 内置函数
 

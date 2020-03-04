@@ -71,4 +71,12 @@ describe("compile/select", () => {
                 "regex('demo',  $$('#content'))": "regex('demo',  $$('#content'))"
             });
     });
+    // it("select.getSelect with sub SELECT", () => {
+    //     let _select = `text($('h3')) as title, regex('demo',  $$('#content'))`;
+    //     expect(select.getSelect(_select)).to.be.an("object")
+    //         .that.deep.equal({
+    //             "title": "text($('h3'))",
+    //             "regex('demo',  $$('#content'))": "regex('demo',  $$('#content'))"
+    //         });
+    // });
 });

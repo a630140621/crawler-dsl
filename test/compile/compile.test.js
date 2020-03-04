@@ -17,9 +17,12 @@ describe("compile", () => {
         `;
 
         expect(compile.compile(cql)).to.be.an("object").and.that.deep.equal({
-            from_urls: [
-                "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html"
-            ],
+            from: {
+                subselect: "",
+                urls: [
+                    "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html"
+                ]
+            },
             select_script: {
                 title: "text(css('#title'))",
                 content: "html(css('#content'))"
@@ -40,13 +43,38 @@ describe("compile", () => {
             FROM
                 https://www.yuncaijing.com/story/details/id_1287.html`;
         expect(compile.compile(cql)).to.be.an("object").and.that.deep.equal({
-            from_urls: [
-                "https://www.yuncaijing.com/story/details/id_1287.html"
-            ],
+            from: {
+                subselect: "",
+                urls: [
+                    "https://www.yuncaijing.com/story/details/id_1287.html"
+                ]
+            },
             select_script: {
                 stock: "text(css('.child-wrap table tbody tr td:nth-child(1)'))",
                 reason: "text(css('.child-wrap table tr td:nth-child(4) span span'))",
                 relate: "text(css('.child-wrap table tr td:nth-child(5)'))"
+            },
+            set: {}
+        });
+    });
+
+    it("compile.compile with sub SELECT", () => {
+        let cql = `
+            SELECT
+                $("h1") AS title
+            FROM (
+                SELECT 
+                    $$("#js_top_news a") AS url
+                FROM https://news.163.com
+            )
+        `;
+        expect(compile.compile(cql)).to.be.an("object").and.that.deep.equal({
+            from: {
+                subselect: `SELECT $$("#js_top_news a") AS url FROM https://news.163.com`,
+                urls: []
+            },
+            select_script: {
+                title: `$("h1")`,
             },
             set: {}
         });
@@ -97,6 +125,21 @@ describe("compile", () => {
                 DEFINE: "url=https://news.feheadline.com/from/page.html",
                 SELECT: "xxx AS xxxx",
                 FROM: "url"
+            });
+    });
+    it("compile.getSplitList with subselect", () => {
+        let string = `
+                SELECT  xxx AS xxxx
+                FROM (
+                    SELECT 
+                        $$("#js_top_news a") AS url
+                    FROM https://news.163.com
+                )`.trim().replace(/\s+/g, " ");
+
+        expect(compile.getSplitList(string, ["select", "from"])).to.be.an("object")
+            .and.deep.equal({
+                SELECT: "xxx AS xxxx",
+                FROM: `( SELECT $$("#js_top_news a") AS url FROM https://news.163.com )`
             });
     });
 });
