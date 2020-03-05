@@ -3,6 +3,7 @@ const from = require("./from");
 const set = require("./set");
 const select = require("./select");
 const Trie = require("../../../lib/Trie.class");
+const limit = require("./limit");
 
 
 function compile(cql) {
@@ -14,14 +15,20 @@ function compile(cql) {
     let {
         SELECT,
         FROM,
-        SET
-    } = getSplitList(_cql, ["SELECT", "FROM", "SET"]);
+        SET,
+        LIMIT
+    } = getSplitList(_cql, ["SELECT", "FROM", "SET", "LIMIT"]);
 
-    return {
-        from: from.handleFrom(FROM), // {subselect: "", urls: []}
-        select_script: select.getSelect(SELECT),
-        set: set.getSet(SET)
+    let ret = {
+        from: from.handleFrom(FROM),
+        select_script: select.getSelect(SELECT)
     };
+    let _set = set.getSet(SET);
+    if (Object.keys(_set).length > 0) ret["set"] = _set;
+    let _limit = limit(LIMIT);
+    if (_limit || _limit === 0) ret["limit"] = _limit;
+
+    return ret;
 }
 
 

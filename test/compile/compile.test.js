@@ -4,7 +4,30 @@ const compile = require("../../crawler/cql/compile");
 
 
 describe("compile", () => {
-    it("compile.compile 1", () => {
+    it("compile.compile with LIMIT", () => {
+        let cql = `
+            SELECT text($('h1')) AS title
+            FROM
+                https://news.163.com/20/0217/13/F5JDV8GD000189FH.html,
+                https://news.163.com/20/0217/13/F5JDV8GD000189FH.html
+            LIMIT 3`;
+
+        expect(compile.compile(cql)).to.be.an("object").and.that.deep.equal({
+            select_script: {
+                title: "text($('h1'))"
+            },
+            from: {
+                subselect: "",
+                urls: [
+                    "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",
+                    "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html"
+                ]
+            },
+            limit: 3
+        });
+    });
+
+    it("compile.compile with comment", () => {
         let cql = `
             # some comment
             select 
@@ -25,8 +48,7 @@ describe("compile", () => {
             select_script: {
                 title: "text(css('#title'))",
                 content: "html(css('#content'))"
-            },
-            set: {}
+            }
         });
     });
 
@@ -50,8 +72,7 @@ describe("compile", () => {
                 stock: "text(css('.child-wrap table tbody tr td:nth-child(1)'))",
                 reason: "text(css('.child-wrap table tr td:nth-child(4) span span'))",
                 relate: "text(css('.child-wrap table tr td:nth-child(5)'))"
-            },
-            set: {}
+            }
         });
     });
 
@@ -72,8 +93,7 @@ describe("compile", () => {
             },
             select_script: {
                 title: `$("h1")`,
-            },
-            set: {}
+            }
         });
     });
 

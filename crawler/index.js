@@ -14,11 +14,12 @@ module.exports = async function crawl(cql) {
     debug(`before compile cql = ${cql}`);
     let {
         from: {
-            subselect,
-            urls
+            subselect = "",
+            urls = []
         },
-        select_script,
-        set
+        select_script = {},
+        set = {},
+        limit = Infinity
     } = compile(cql);
 
     // 从 from 子查询中提取 url
@@ -47,11 +48,12 @@ module.exports = async function crawl(cql) {
     };
     let download_method = getHtmls;
     if (set.DOWNLOAD_ENGINE === "puppeteer") download_method = getHtmlsSync;
+    // 如果有 limit 则截取 urls 中前 limit 个进行处理
     let ret = [];
     for await (let {
         url,
         html
-    } of download_method(urls, options)) {
+    } of download_method(urls.slice(0, limit), options)) {
         let item = {
             url
         };
