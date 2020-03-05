@@ -7,7 +7,6 @@ describe("compile", () => {
     it("compile.compile 1", () => {
         let cql = `
             # some comment
-            set encoding=gb2312
             select 
                 text(css('#title')) AS title,
                 html(css('#content')) as content
@@ -27,9 +26,7 @@ describe("compile", () => {
                 title: "text(css('#title'))",
                 content: "html(css('#content'))"
             },
-            set: {
-                ENCODING: "gb2312"
-            }
+            set: {}
         });
     });
 

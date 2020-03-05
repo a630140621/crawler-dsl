@@ -13,7 +13,7 @@ npm install a630140621/crawler-dsl -g
 ### 抓取详情页（单页）
 
 ```bash
-crawl --cql 'SET ENCODING=gbk SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html'
+crawl --cql 'SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html'
 # [
 #     {
 #         "url": "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",
@@ -27,7 +27,7 @@ crawl --cql 'SET ENCODING=gbk SELECT text($("h1")) AS title FROM https://news.16
 或抓取多页
 
 ```bash
-crawl --cql 'SET ENCODING=gbk SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html, https://news.163.com/20/0225/11/F67P1C0Q000189FH.html'
+crawl --cql 'SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html, https://news.163.com/20/0225/11/F67P1C0Q000189FH.html'
 # [
 #     {
 #         "url": "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",
@@ -50,7 +50,6 @@ crawl --cql 'SET ENCODING=gbk SELECT text($("h1")) AS title FROM https://news.16
 
 ```bash
 # 抓取 title, summary, pubdate
-SET ENCODING=gb2312
 SELECT
     text(css("#news dt a")) AS title,
     text(css("#news dt p:nth-child(2)")) AS summary,
@@ -100,7 +99,6 @@ FROM
 以 https://news.163.com 为例
 
 ```bash
-SET ENCODING=gbk
 SELECT
     text($("h1")) AS title,
     regex(/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/, text($(".post_time_source"))) AS pubdate,

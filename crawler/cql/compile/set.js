@@ -1,7 +1,6 @@
 /**
  * 处理 set 子句
  * 目前可以设置的变量有:
- *  - ENCODING
  *  - DOWNLOAD_TIMEOUT
  *  - DOWNLOAD_ENGINE: "puppeteer" or ""
  */

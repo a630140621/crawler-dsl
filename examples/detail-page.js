@@ -4,7 +4,6 @@ const crawl = require("../crawler/index.js");
 
 // 抓取单个网页
 crawl(`
-SET ENCODING=gbk 
 SELECT 
     text(css('h1')) AS title,
     regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}", text(css(".post_time_source"))) AS pubdate
@@ -28,7 +27,6 @@ FROM
 
 // 同时抓取多个网页
 crawl(`
-SET ENCODING=gbk 
 SELECT 
     text(css('h1')) AS title,
     regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}", text(css(".post_time_source"))) AS pubdate

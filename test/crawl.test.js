@@ -11,7 +11,7 @@ describe("crawl", () => {
         download.mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/F5JDV8GD000189FH.html"), {
             encoding: "utf8"
         }));
-        let ret = await crawl(`SET ENCODING=gbk SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html`);
+        let ret = await crawl(`SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html`);
         expect(ret).to.be.an("array").that.have.length(1);
         expect(ret[0]).to.deep.equal({
             url: "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",
@@ -28,7 +28,7 @@ describe("crawl", () => {
             .mockResolvedValueOnce(fs.readFileSync(path.join(__dirname, "./mock/F67P1C0Q000189FH.html"), {
                 encoding: "utf8"
             }));
-        let ret = await crawl(`SET ENCODING=gbk SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html, https://news.163.com/20/0225/11/F67P1C0Q000189FH.html`);
+        let ret = await crawl(`SELECT text($("h1")) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html, https://news.163.com/20/0225/11/F67P1C0Q000189FH.html`);
         expect(ret).to.be.an("array").that.have.length(2);
         expect(ret[0]).to.deep.equal({
             url: "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html",

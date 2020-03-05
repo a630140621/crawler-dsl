@@ -6,7 +6,6 @@ describe("compile/comment", () => {
     it("remove comment", () => {
         let cql = `
             #这是一些注释，应该被清除掉
-            SET ENCODING=gbk 
             SELECT 
                 text(css("h1")) AS title 
             FROM 
@@ -15,7 +14,6 @@ describe("compile/comment", () => {
         `;
 
         expect(removeComment(cql)).to.be.an("string").that.equal(`
-            SET ENCODING=gbk 
             SELECT 
                 text(css("h1")) AS title 
             FROM 

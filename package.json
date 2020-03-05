@@ -1,6 +1,6 @@
 {
   "name": "crawler-cql",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "crawler with cql",
   "main": "index.js",
   "directories": {
@@ -34,11 +34,11 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
-    "iconv-lite": "^0.5.1",
+    "html-encoding-sniffer": "^2.0.1",
+    "node-fetch": "^2.6.0",
     "promise.allsettled": "^1.0.2",
     "puppeteer": "^2.1.1",
-    "request": "^2.88.2",
-    "request-promise-native": "^1.0.8",
+    "whatwg-encoding": "^1.0.5",
     "yargs": "^15.1.0"
   }
 }

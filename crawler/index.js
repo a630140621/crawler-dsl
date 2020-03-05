@@ -42,7 +42,6 @@ module.exports = async function crawl(cql) {
     // 根据是否 使用 puppeteer 选择是否使用异步抓取
     // puppeteer不使用异步主要是因为，如果同时开很多会非常消耗性能
     let options = {
-        encoding: set.ENCODING,
         timeout: set.DOWNLOAD_TIMEOUT,
         engine: set.DOWNLOAD_ENGINE
     };
