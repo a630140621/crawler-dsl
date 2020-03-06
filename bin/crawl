@@ -19,4 +19,5 @@ const crawl = require("../crawler/index");
 
 crawl(argv.cql).then(ret => {
     console.log(JSON.stringify(ret, null, 4));
+    process.exit();
 }).catch(console.error);

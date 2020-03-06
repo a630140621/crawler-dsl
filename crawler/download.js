@@ -90,17 +90,18 @@ async function downloadWithJsDom(url, {
     return jsdom.JSDOM.fromURL(url, {
         // runScripts: "outside-only",
         runScripts: "dangerously",
-        resources: "usable", // 开启加载 <script src=""></script> 脚本
+        resources: "usable", // 开启加载 外部资源 如<script src=""></script> 脚本、<img> 等，由于jsdom尚未提供仅加载script脚本的，所以暂时仅处理到这里。
         pretendToBeVisual: true,
         userAgent: USERAGENT,
         virtualConsole
     }).then(dom => {
+        debug(`jsdom load have already loaded url, now wait window.onload`);
         _dom = dom;
         return new Promise((resolve, reject) => {
-            dom.window.onload = () => {
+            dom.window.addEventListener("load", () => {
                 debug(`jsdom.window emit onload event get html and resolve`);
                 return resolve(dom.serialize());
-            };
+            });
 
             if (timeout && timeout !== -1) {
                 setTimeout(() => {
