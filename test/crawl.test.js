@@ -7,7 +7,7 @@ const path = require("path");
 jest.mock("../crawler/download.js");
 const download = require("../crawler/download.js");
 describe("crawl", () => {
-    beforeEach(() => {
+    afterEach(() => {
         download.mockRestore(); // 清理 mock
     });
 
