@@ -6,14 +6,14 @@ const buildin = require("./cql/buildin");
  * @param {string} html
  * @param {Object} { [variable]: "extract script" }
  */
-module.exports = function (html, select_script) {
+module.exports = function (html, select_script, origin_url) {
     let $ = cheerio.load(html, {
         decodeEntities: false
     });
 
     let combine = {};
     for (let [key, script] of Object.entries(select_script)) {
-        combine[key] = buildin.evalBuildInScript($, script);
+        combine[key] = buildin.evalBuildInScript($, script, origin_url);
     }
 
     let is_zip = true; // 是否需要自动 zip

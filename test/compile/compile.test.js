@@ -4,6 +4,114 @@ const compile = require("../../crawler/cql/compile");
 
 
 describe("compile", () => {
+    it("compile.compile with NEXT URL and MERGE", () => {
+        let cql = `
+        SET
+            DOWNLOAD_TIMEOUT=-1,
+            DOWNLOAD_ENGINE=puppeteer
+        SELECT
+            text($('h3')) AS title,
+            text($('.forum-content')) AS content
+        FROM
+            https://www.esjzone.cc/forum/1546618252/57514.html
+        NEXT URL
+            href($('.btn-next'))`;
+
+        expect(compile.compile(cql)).to.be.an("object").that.deep.equal({
+            set: {
+                DOWNLOAD_ENGINE: "puppeteer",
+                DOWNLOAD_TIMEOUT: -1
+            },
+            select_script: {
+                title: "text($('h3'))",
+                content: "text($('.forum-content'))"
+            },
+            from: {
+                subselect: "",
+                urls: [
+                    "https://www.esjzone.cc/forum/1546618252/57514.html"
+                ]
+            },
+            next_url: {
+                selector: "href($('.btn-next'))"
+            }
+        });
+    });
+
+    it("compile.compile with NEXT URL with url and MERGE", () => {
+        let cql = `
+        SET
+            DOWNLOAD_TIMEOUT=-1,
+            DOWNLOAD_ENGINE=puppeteer
+        SELECT
+            text($('h3')) AS title,
+            text($('.forum-content')) AS content
+        FROM
+            https://www.esjzone.cc/forum/1546618252/57514.html
+        NEXT URL
+            https://www.esjzone.cc/forum/1546618252/57517.html
+        MERGE content`;
+
+        expect(compile.compile(cql)).to.be.an("object").that.deep.equal({
+            set: {
+                DOWNLOAD_ENGINE: "puppeteer",
+                DOWNLOAD_TIMEOUT: -1
+            },
+            select_script: {
+                title: "text($('h3'))",
+                content: "text($('.forum-content'))"
+            },
+            from: {
+                subselect: "",
+                urls: [
+                    "https://www.esjzone.cc/forum/1546618252/57514.html"
+                ]
+            },
+            next_url: {
+                urls: [
+                    "https://www.esjzone.cc/forum/1546618252/57517.html"
+                ]
+            },
+            merge: ["content"]
+        });
+    });
+
+    it("compile.compile with NEXT URL with selector and MERGE", () => {
+        let cql = `
+        SET
+            DOWNLOAD_TIMEOUT=-1,
+            DOWNLOAD_ENGINE=puppeteer
+        SELECT
+            text($('h3')) AS title,
+            text($('.forum-content')) AS content
+        FROM
+            https://www.esjzone.cc/forum/1546618252/57514.html
+        NEXT URL
+            href($('.btn-next'))
+        MERGE content`;
+
+        expect(compile.compile(cql)).to.be.an("object").that.deep.equal({
+            set: {
+                DOWNLOAD_ENGINE: "puppeteer",
+                DOWNLOAD_TIMEOUT: -1
+            },
+            select_script: {
+                title: "text($('h3'))",
+                content: "text($('.forum-content'))"
+            },
+            from: {
+                subselect: "",
+                urls: [
+                    "https://www.esjzone.cc/forum/1546618252/57514.html"
+                ]
+            },
+            next_url: {
+                selector: "href($('.btn-next'))"
+            },
+            merge: ["content"]
+        });
+    });
+
     it("compile.compile with LIMIT", () => {
         let cql = `
             SELECT text($('h1')) AS title

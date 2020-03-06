@@ -16,7 +16,20 @@ function raw(string) {
 
 
 // script: "text($('li'))"
-function wrapper(_$, script) {
+function wrapper(_$, script, origin_url) {
+    function resolveUrlIfNeeded(attribute, url) {
+        if (!origin_url) return url;
+        if (attribute === "src" || attribute === "href") {
+            if (url.slice(0, 4) === "http") return url;
+            var protocol = origin_url.split(":")[0];
+            if (url.slice(0, 2) === "//") return protocol + ":" + url;
+            var split = origin_url.split("/");
+            return split[0] + "//" + split[2] + url;
+        }
+
+        return url;
+    }
+
     // 内置函数
     function $(selector) {
         let node = _$(selector);
@@ -35,11 +48,12 @@ function wrapper(_$, script) {
     // 获取节点属性
     function attr($_, attribute) {
         debug(`run buildin func attr to get attribute ${attribute}`);
-        if ($_.$) return $_.eq(0).attr(attribute) || "";
+
+        if ($_.$) return resolveUrlIfNeeded(attribute, $_.eq(0).attr(attribute) || "");
         else {
             let ret = [];
             $_.each(function (i, elem) {
-                ret.push(_$(this).attr(attribute) || "");
+                ret.push(resolveUrlIfNeeded(attribute, _$(this).attr(attribute) || ""));
             });
 
             return ret;
@@ -135,11 +149,12 @@ function wrapper(_$, script) {
  * 运行 cql 中的内置函数
  * @param {object} $ cheerio 实例
  * @param {string} script 
+ * @param {string} url 网页地址
  * 
  * eg.
  *  evalBuildInScript($, "text(css("#id"))")
  */
-exports.evalBuildInScript = function ($, script) {
+exports.evalBuildInScript = function ($, script, url) {
     debug(`run script ${script}`);
-    return wrapper($, script);
+    return wrapper($, script, url);
 };

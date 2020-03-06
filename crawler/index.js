@@ -4,6 +4,7 @@ const download = require("./download");
 const extract = require("./extract");
 const allSettled = require("promise.allsettled");
 allSettled.shim(); // 注入 Promise if needed
+const Denque = require("denque");
 
 
 /**
@@ -19,7 +20,9 @@ module.exports = async function crawl(cql) {
         },
         select_script = {},
         set = {},
-        limit = Infinity
+        limit = Infinity,
+        next_url: NEXT_URL = {}, // {selector: "", urls: []}
+        merge = []
     } = compile(cql);
 
     // 从 from 子查询中提取 url
@@ -46,23 +49,92 @@ module.exports = async function crawl(cql) {
         timeout: set.DOWNLOAD_TIMEOUT,
         engine: set.DOWNLOAD_ENGINE
     };
-    let download_method = getHtmls;
-    if (set.DOWNLOAD_ENGINE === "puppeteer") download_method = getHtmlsSync;
-    // 如果有 limit 则截取 urls 中前 limit 个进行处理
+    let download_method = getDownloadMethodByEngine(set.DOWNLOAD_ENGINE);
+
     let ret = [];
-    for await (let {
-        url,
-        html
-    } of download_method(urls.slice(0, limit), options)) {
-        let item = {
-            url
-        };
-        if (html) item["select"] = extract(html, select_script);
-        ret.push(item);
+    if (Object.keys(NEXT_URL).length === 0) { // 不存在 NEXT URL 子句
+        // 如果有 limit 则截取 urls 中前 limit 个进行处理
+        for await (let [url, html] of download_method(urls.slice(0, limit), options)) {
+            let item = {
+                url
+            };
+            if (html) item["select"] = extract(html, select_script, url);
+            ret.push(item);
+        }
+    } else { // 有 NEXT URL 子句情况下
+        for (let url of urls) {
+            limit -= 1;
+            let html = await download(url, options);
+            if (!html) { // 下载失败或超时等情况
+                ret.push({
+                    url
+                });
+                continue;
+            }
+            ret.push({
+                url,
+                select: extract(html, select_script, url)
+            });
+
+            // 进行 NEXT URL 处理
+            let next_url_list = getNextUrl(url, html, NEXT_URL);
+            next_url_list.reverse();
+            let deque = new Denque(next_url_list);
+            while (!deque.isEmpty() && limit > 0) {
+                limit -= 1;
+                let next_url = deque.pop();
+                debug(`continue NEXT URL clause download ${next_url}`);
+                let next_html = await download(next_url, options);
+                let next_select = extract(next_html, select_script, next_url);
+                if (merge.length === 0) { // 不需要合并
+                    ret.push({
+                        url: next_url,
+                        select: next_select
+                    });
+                } else {
+                    for (let need_to_merge_key of merge) {
+                        if (Array.isArray(ret[ret.length - 1].select)) ret[ret.length - 1].select.push(...next_select);
+                        else ret[ret.length - 1].select[need_to_merge_key] += next_select[need_to_merge_key];
+                    }
+                }
+                // 继续处理 NEXT URL 直到为 falsy
+                let _next_url_list = getNextUrl(next_url, next_html, NEXT_URL);
+                _next_url_list.reverse();
+                for (let u of _next_url_list) {
+                    deque.push(u);
+                }
+            }
+        }
     }
 
     return ret;
 };
+
+
+function getNextUrl(url, html, next_url) {
+    let ret = [];
+    if (next_url.selector) {
+        let select = extract(html, {
+            url: next_url.selector
+        }, url);
+        if (Array.isArray(select.url)) {
+            ret = select.url;
+        } else {
+            ret = [select.url];
+        }
+    } else if (next_url.urls) {
+        ret = next_url.urls;
+    }
+
+    debug(`get next url = ${ret}`);
+    return ret;
+}
+
+
+function getDownloadMethodByEngine(engine) {
+    if (engine === "puppeteer") return getHtmlsSync;
+    else return getHtmls;
+}
 
 
 // 子查询是否合法，目前仅判断子查询是否只包含一个字段（类似sql）
@@ -83,11 +155,8 @@ async function* getHtmls(urls, options) {
     debug(`asynchronous download urls = ${urls}`);
     let htmls = await Promise.allSettled(urls.map(url => download(url, options)));
     for (let [index, each] of htmls.entries()) {
-        let item = {
-            url: urls[index],
-            html: ""
-        };
-        if (each.status !== "rejected") item["html"] = each.value;
+        let item = [urls[index]];
+        if (each.status !== "rejected") item.push(each.value);
         yield item;
     }
 }
@@ -102,9 +171,6 @@ async function* getHtmlsSync(urls, options) {
         } catch (error) {
             debug(`download url ${url} have some error = ${error}`);
         }
-        yield {
-            url,
-            html
-        };
+        yield [url, html];
     }
 }

@@ -4,6 +4,8 @@ const set = require("./set");
 const select = require("./select");
 const Trie = require("../../../lib/Trie.class");
 const limit = require("./limit");
+const nextUrl = require("./next-url");
+const merge = require("./merge");
 
 
 function compile(cql) {
@@ -16,8 +18,10 @@ function compile(cql) {
         SELECT,
         FROM,
         SET,
-        LIMIT
-    } = getSplitList(_cql, ["SELECT", "FROM", "SET", "LIMIT"]);
+        LIMIT,
+        "NEXT URL": NEXT_URL,
+        MERGE
+    } = getSplitList(_cql, ["SELECT", "FROM", "SET", "LIMIT", "NEXT URL", "MERGE"]);
 
     let ret = {
         from: from.handleFrom(FROM),
@@ -27,6 +31,10 @@ function compile(cql) {
     if (Object.keys(_set).length > 0) ret["set"] = _set;
     let _limit = limit(LIMIT);
     if (_limit || _limit === 0) ret["limit"] = _limit;
+    let _next_url = nextUrl(NEXT_URL);
+    if (Object.keys(_next_url).length > 0) ret["next_url"] = _next_url;
+    let _merge = merge(MERGE);
+    if (_merge.length > 0) ret["merge"] = _merge;
 
     return ret;
 }

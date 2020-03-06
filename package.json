@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
+    "denque": "^1.4.1",
     "html-encoding-sniffer": "^2.0.1",
     "jsdom": "^16.2.0",
     "node-fetch": "^2.6.0",
