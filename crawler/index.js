@@ -24,9 +24,9 @@ async function crawl(cql) {
         next_url: NEXT_URL = {}, // {selector: "", urls: []}
         merge = []
     } = compile(cql);
-
+    debug("compile next_url", JSON.stringify(NEXT_URL));
     // 从 from 子查询中提取 url
-    if(subselect) urls.push(...await getUrlsFromSubselect(set, subselect));
+    if (subselect) urls.push(...await getUrlsFromSubselect(set, subselect));
 
     // 根据是否 使用 puppeteer 选择是否使用异步抓取
     // puppeteer不使用异步主要是因为，如果同时开很多会非常消耗性能
@@ -43,19 +43,13 @@ async function crawl(cql) {
             let item = {
                 url
             };
-            if (html) item["select"] = extract(html, select_script, url);
+            item["select"] = extract(html, select_script, url);
             ret.push(item);
         }
     } else { // 有 NEXT URL 子句情况下
         for (let url of urls) {
             limit -= 1;
             let html = await download(url, options);
-            if (!html) { // 下载失败或超时等情况
-                ret.push({
-                    url
-                });
-                continue;
-            }
             ret.push({
                 url,
                 select: extract(html, select_script, url)
@@ -137,15 +131,16 @@ function isValidSubselectThenGetSelectKey(subselect) {
 
 
 function getNextUrl(url, html, next_url) {
+    debug("getNextUrl", url, html, next_url);
     let ret = [];
     if (next_url.selector) {
         let select = extract(html, {
             url: next_url.selector
         }, url);
-        if (Array.isArray(select.url)) {
-            ret = select.url;
+        if (Array.isArray(select)) {
+            ret = select.map(item => item.url).filter(item => item); // 过滤到属性值为空的
         } else {
-            ret = [select.url];
+            if (select.url) ret = [select.url];
         }
     } else if (next_url.urls) {
         ret = next_url.urls;

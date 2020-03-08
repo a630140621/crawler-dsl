@@ -7,6 +7,7 @@ const buildin = require("./cql/buildin");
  * @param {Object} { [variable]: "extract script" }
  */
 module.exports = function (html, select_script, origin_url) {
+    if (!html) return {};
     let $ = cheerio.load(html, {
         decodeEntities: false
     });

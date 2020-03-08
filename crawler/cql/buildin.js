@@ -18,7 +18,8 @@ function raw(string) {
 // script: "text($('li'))"
 function wrapper(_$, script, origin_url) {
     function resolveUrlIfNeeded(attribute, url) {
-        if (!origin_url) return url;
+        debug(`resolve url if needed attribute = ${attribute} origin_url = ${origin_url} url = ${url}`);
+        if (!origin_url || !url) return url;
         if (attribute === "src" || attribute === "href") {
             if (url.slice(0, 4) === "http") return url;
             var protocol = origin_url.split(":")[0];
