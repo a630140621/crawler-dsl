@@ -19,7 +19,11 @@
     "url": "git+https://github.com/a630140621/crawler-cql.git"
   },
   "keywords": [
-    "cql"
+    "cql",
+    "crawler",
+    "crawl",
+    "web",
+    "spider"
   ],
   "author": "630140621@qq.com",
   "license": "MIT",

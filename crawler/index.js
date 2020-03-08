@@ -11,7 +11,7 @@ const Denque = require("denque");
  * 
  * @return [{url, select: {} || [{}] }]
  */
-module.exports = async function crawl(cql) {
+async function crawl(cql) {
     debug(`before compile cql = ${cql}`);
     let {
         from: {
@@ -26,22 +26,7 @@ module.exports = async function crawl(cql) {
     } = compile(cql);
 
     // 从 from 子查询中提取 url
-    let [select_key, ok] = isValidSubselectThenGetSelectKey(subselect);
-    if (ok) {
-        let ret = await crawl(subselect);
-        let sub_urls = [];
-        for (let each of ret) {
-            if (!Array.isArray(each.select)) {
-                sub_urls.push(each.select[select_key]);
-            } else {
-                for (let st of each.select) {
-                    sub_urls.push(st[select_key]);
-                }
-            }
-        }
-        debug(`from subselect extract wait to crawl urls = ${sub_urls}`);
-        urls.push(...sub_urls);
-    }
+    if(subselect) urls.push(...await getUrlsFromSubselect(set, subselect));
 
     // 根据是否 使用 puppeteer 选择是否使用异步抓取
     // puppeteer不使用异步主要是因为，如果同时开很多会非常消耗性能
@@ -108,7 +93,47 @@ module.exports = async function crawl(cql) {
     }
 
     return ret;
-};
+}
+
+
+// 从 from 子查询中获取 urls
+async function getUrlsFromSubselect(set, subselect) {
+    let [select_key, ok] = isValidSubselectThenGetSelectKey(subselect);
+    if (!ok) return [];
+    if (Object.keys(set).length > 0) {
+        let _set = [];
+        for (let [key, value] of Object.entries(set)) {
+            _set.push(`${key}=${value}`);
+        }
+        subselect = `SET ${_set.join(",")} ${subselect}`;
+    }
+
+    let ret = await crawl(subselect);
+    let sub_urls = [];
+    for (let each of ret) {
+        if (!Array.isArray(each.select)) {
+            sub_urls.push(each.select[select_key]);
+        } else {
+            for (let st of each.select) {
+                sub_urls.push(st[select_key]);
+            }
+        }
+    }
+    debug(`from subselect extract wait to crawl urls = ${sub_urls}`);
+    return sub_urls;
+}
+
+// 子查询是否合法，目前仅判断子查询是否只包含一个字段（类似sql）
+// @returns: [select_key, true/false]
+function isValidSubselectThenGetSelectKey(subselect) {
+    if (!subselect) return ["", false];
+    let {
+        select_script
+    } = compile(subselect);
+    let select_keys = Object.keys(select_script);
+    if (select_keys.length > 1) throw new Error(`subselect can only have one but receive ${select_keys}`);
+    return [select_keys[0], true];
+}
 
 
 function getNextUrl(url, html, next_url) {
@@ -137,18 +162,6 @@ function getDownloadMethodByEngine(engine) {
 }
 
 
-// 子查询是否合法，目前仅判断子查询是否只包含一个字段（类似sql）
-// @returns: [select_key, true/false]
-function isValidSubselectThenGetSelectKey(subselect) {
-    if (!subselect) return ["", false];
-    let {
-        select_script
-    } = compile(subselect);
-    let select_keys = Object.keys(select_script);
-    if (select_keys.length > 1) throw new Error(`subselect can only have one`);
-    return [select_keys[0], true];
-}
-
 // 异步处理
 // @yield {url, html}
 async function* getHtmls(urls, options) {
@@ -160,6 +173,7 @@ async function* getHtmls(urls, options) {
         yield item;
     }
 }
+
 
 // 按照顺序处理
 async function* getHtmlsSync(urls, options) {
@@ -174,3 +188,6 @@ async function* getHtmlsSync(urls, options) {
         yield [url, html];
     }
 }
+
+
+module.exports = crawl;

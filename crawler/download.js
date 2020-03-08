@@ -10,15 +10,13 @@ const USERAGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, li
 
 module.exports = async function (url, {
     timeout = 30000, // 30s 超时
-    headers = {},
     engine = ""
 } = {}) {
     debug(`download url = ${url} with timeout = ${timeout}`);
     let options = {
-        timeout,
-        headers,
+        timeout
     };
-    if (!engine) {
+    if (!engine || engine === "fetch") {
         return await downloadWithFetch(url, options);
     } else if (engine === "puppeteer") {
         return await downloadWithPuppeteer(url, options);
@@ -133,6 +131,7 @@ async function downloadWithPuppeteer(url, {
         debug(`after download url ${url} use puppeteer`);
         return await page.content();
     } catch (error) {
+        debug(`download use puppeteer have some error = ${error}`);
         throw error;
     } finally {
         await browser.close();

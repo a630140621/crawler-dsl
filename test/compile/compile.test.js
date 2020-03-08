@@ -160,6 +160,30 @@ describe("compile", () => {
         });
     });
 
+    it("compile.compile with same AS", () => {
+        let cql = `
+            # some comment
+            select 
+                text(css('#title')) AS title,
+                html(css('#content')) as title
+            # other comment
+            from
+                https://news.163.com/20/0217/13/F5JDV8GD000189FH.html
+        `;
+
+        expect(compile.compile(cql)).to.be.an("object").and.that.deep.equal({
+            from: {
+                subselect: "",
+                urls: [
+                    "https://news.163.com/20/0217/13/F5JDV8GD000189FH.html"
+                ]
+            },
+            select_script: {
+                title: "html(css('#content'))"
+            }
+        });
+    });
+
     it("compile.compile 2", () => {
         let cql = `
             # 抓取 相关股票, 关联原因, 相关性
@@ -206,6 +230,23 @@ describe("compile", () => {
     });
 
 
+    
+    it("compile.getSplitList with many keywords should return correct", () => {
+        let string = `
+            select 
+                text($("h1")) AS title, 
+                regex(/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/, text($(".post_time_source"))) AS pubdate,
+                text($("#ne_article_source")) AS origin
+            from (
+                select href($$("#js_top_news h2 a")) from https://news.163.com
+            )`.trim().replace(/\s+/g, " ");
+        
+        expect(compile.getSplitList(string, ["SELECT", "FROM", "SET", "LIMIT", "NEXT URL", "MERGE"])).to.be.an("object")
+            .that.deep.equal({
+                SELECT: `text($("h1")) AS title, regex(/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/, text($(".post_time_source"))) AS pubdate, text($("#ne_article_source")) AS origin`,
+                FROM: `( select href($$("#js_top_news h2 a")) from https://news.163.com )`
+            });
+    });
     it("compile.getSplitList should return object with two keys", () => {
         let string = `
             SELECT
