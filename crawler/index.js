@@ -5,6 +5,7 @@ const extract = require("./extract");
 const allSettled = require("promise.allsettled");
 allSettled.shim(); // 注入 Promise if needed
 const Denque = require("denque");
+const lifeCycle = require("./lifecycle");
 
 
 /**
@@ -25,6 +26,7 @@ async function crawl(cql) {
         merge = []
     } = compile(cql);
     debug("compile next_url", JSON.stringify(NEXT_URL));
+    if (limit === 0) return [];
     // 从 from 子查询中提取 url
     if (subselect) urls.push(...await getUrlsFromSubselect(set, subselect));
 
@@ -38,33 +40,52 @@ async function crawl(cql) {
 
     let ret = [];
     if (Object.keys(NEXT_URL).length === 0) { // 不存在 NEXT URL 子句
+        // 由于需要并行处理，所以在未下载之前先调用生命周期函数 beforeEachCrawl 来确定哪些 url 要下载
+        let wait_to_download_urls = [];
+        for (let url of urls) {
+            let is_crawl = await lifeCycle.beforeEachCrawl(url);
+            if (is_crawl !== false) {
+                wait_to_download_urls.push(url);
+                if (wait_to_download_urls.length === limit) break;
+            }
+        }
         // 如果有 limit 则截取 urls 中前 limit 个进行处理
-        for await (let [url, html] of download_method(urls.slice(0, limit), options)) {
+        for await (let [url, html] of download_method(wait_to_download_urls, options)) {
             let item = {
                 url
             };
             item["select"] = extract(html, select_script, url);
             ret.push(item);
+            lifeCycle.afterEachCrawl(url, html ? "success" : "fail", item["select"]);
         }
     } else { // 有 NEXT URL 子句情况下
         for (let url of urls) {
+            // 生命周期
+            let is_crawl = await lifeCycle.beforeEachCrawl(url);
+            if (is_crawl === false) continue;
             limit -= 1;
             let html = await download(url, options);
             ret.push({
                 url,
                 select: extract(html, select_script, url)
             });
+            lifeCycle.afterEachCrawl(url, html ? "success" : "fail", ret[ret.length - 1]["select"]);
 
             // 进行 NEXT URL 处理
             let next_url_list = getNextUrl(url, html, NEXT_URL);
             next_url_list.reverse();
             let deque = new Denque(next_url_list);
             while (!deque.isEmpty() && limit > 0) {
-                limit -= 1;
                 let next_url = deque.pop();
+                // 生命周期
+                let is_crawl = await lifeCycle.beforeEachCrawl(next_url);
+                if (is_crawl === false) continue;
+
+                limit -= 1;
                 debug(`continue NEXT URL clause download ${next_url}`);
                 let next_html = await download(next_url, options);
                 let next_select = extract(next_html, select_script, next_url);
+                lifeCycle.afterEachCrawl(next_url, next_html ? "success" : "fail", next_select);
                 if (merge.length === 0) { // 不需要合并
                     ret.push({
                         url: next_url,

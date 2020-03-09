@@ -4,6 +4,8 @@ const fetch = require("node-fetch"); // https://www.npmjs.com/package/node-fetch
 const htmlEncodingSniffer = require("html-encoding-sniffer"); // whatwg 标准解码嗅探算法
 const whatwgEncoding = require("whatwg-encoding"); // 构建在 iconv-lite 之上，使其符合 whatwg 规范
 const jsdom = require("jsdom");
+const lifeCycle = require("./lifecycle");
+
 
 const USERAGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36";
 
@@ -13,6 +15,7 @@ module.exports = async function (url, {
     engine = ""
 } = {}) {
     debug(`download url = ${url} with timeout = ${timeout}`);
+    lifeCycle.beforeEachDownload(url, engine || "fetch");
     let options = {
         timeout
     };
@@ -32,15 +35,20 @@ async function downloadWithFetch(url, {
     timeout = 30000,
     headers = {},
 } = {}) {
-    debug(`download url ${url} use node-fetch`, {
-        headers: Object.assign(headers, {
-            "User-Agent": USERAGENT
-        }),
-        timeout
-    });
+    debug(`download url ${url} use node-fetch`);
 
-    let res = await fetch(url);
-    return decodeHtmlBuffer(res.headers.get("content-type"), await res.buffer());
+    let res = null;
+    try {
+        res = await fetch(url, {
+            timeout: timeout !== -1 ? timeout : 0
+        });
+        lifeCycle.afterEachDownload(url, "success");
+    } catch (error) {
+        debug(error);
+        lifeCycle.afterEachDownload(url, "fail");
+    }
+    if (res) return decodeHtmlBuffer(res.headers.get("content-type"), await res.buffer());
+    else return "";
 }
 
 /**
@@ -96,14 +104,18 @@ async function downloadWithJsDom(url, {
         debug(`jsdom load have already loaded url, now wait window.onload`);
         _dom = dom;
         return new Promise((resolve, reject) => {
+            let timer = null;
             dom.window.addEventListener("load", () => {
                 debug(`jsdom.window emit onload event get html and resolve`);
+                if (timer) clearTimeout(timer); // 清除定时器
+                lifeCycle.afterEachDownload(url, "success");
                 return resolve(dom.serialize());
             });
 
             if (timeout && timeout !== -1) {
-                setTimeout(() => {
+                timer = setTimeout(() => {
                     debug(`jsdom load resource timeout after ${timeout} reject error`);
+                    lifeCycle.afterEachDownload(url, "fail");
                     return reject(`Error: jsdom timeout after ${timeout}`);
                 }, timeout);
             }
@@ -129,9 +141,11 @@ async function downloadWithPuppeteer(url, {
             waitUntil: "load"
         });
         debug(`after download url ${url} use puppeteer`);
+        lifeCycle.afterEachDownload(url, "success");
         return await page.content();
     } catch (error) {
         debug(`download use puppeteer have some error = ${error}`);
+        lifeCycle.afterEachDownload(url, "fail");
         throw error;
     } finally {
         await browser.close();

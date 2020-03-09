@@ -182,6 +182,24 @@ LIMIT 3
 
 > 如果有一些地址需要同步抓取，则也可以使用 `NEXT URL`
 
+## lifecycle
+
+爬虫抓取过程生命周期。
+
+通常用来提供一些，统计，去重，监控功能。
+
+### 抓取过程
+
+<!-- * beforeCrawl(urls) -> 待抓取 url 列表，__如果返回一个数组，则抓取数组中指定的链接__（由于`NEXT URL`可能只有在抓取玩上一个页面才知道下一个页面的地址，所以不提供） -->
+* beforeEachCrawl(url) -> 每一个具体的抓取前，__如果返回 false，则不抓取该地址__（会忽略除 `false` 之外的任何值）；
+* afterEachCrawl(url, status， select) -> 每一个链接抓取结束，status 表示抓取状态（`success`/`fail`），select 为抓取的内容；
+<!-- * afterCrawl(results) -> 一条语句执行完毕（`results`:`[{url: "", select: {}, status: ""}]`）； -->
+
+### 下载过程
+
+* beforeEachDownload(url, engine)
+* afterEachDownload(url, status, html) -> status: `success`/`fail`
+
 [更多语法参考](docs/grammer.md)
 
 ## 测试
