@@ -18,6 +18,9 @@ const fruits = cheerio.load(`
 </ul>`);
 
 describe("buildin", () => {
+    it("buildin.text() if receive string should return directly", () => {
+        expect(buildin.evalBuildInScript(fruits, "text('li')")).to.be.a("string").that.equal("li");
+    });
     it("buildin.$ with text() should return first node innerText", () => {
         expect(buildin.evalBuildInScript(fruits, "text($('li'))")).to.be.a("string").that.equal("Apple");
     });

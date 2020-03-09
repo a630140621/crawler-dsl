@@ -72,6 +72,7 @@ function wrapper(_$, script, origin_url) {
     // @return "text" or ["text"]
     function text($_) {
         debug(`run buildin func text`);
+        if (typeof $_ === "string") return $_;
         if ($_.$) return $_.eq(0).text().trim();
         else {
             let ret = [];
