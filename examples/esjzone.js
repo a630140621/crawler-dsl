@@ -18,7 +18,7 @@ const {
 
     lifeCycle.afterEachCrawl = function (url, status, select) {
         if (status === "success") {
-            fs.writeFileSync(path.join(__dirname, `./esjzone/${select.title}`), `${url}\n\n${select.title}\n\n${select.content}`);
+            fs.writeFileSync(path.join(__dirname, `./esjzone/${select.title}.txt`), `${url}\n\n${select.title}\n\n${select.content}`);
         } else {
             console.error(`crawl url ${url} status = ${status}`);
         }
