@@ -8,7 +8,7 @@ const lifeCycle = require("./lifecycle");
 
 
 const USERAGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36";
-
+const MAX_RETRY = 3;
 
 module.exports = async function (url, {
     timeout = 30000, // 30s 超时
@@ -33,9 +33,13 @@ module.exports = async function (url, {
 
 async function downloadWithFetch(url, {
     timeout = 30000,
-    headers = {},
+    retry = 0 // 重试次数
 } = {}) {
-    debug(`download url ${url} use node-fetch`);
+    debug(`download url ${url} use node-fetch retry = ${retry}`);
+    if (retry >= MAX_RETRY) {
+        lifeCycle.afterEachDownload(url, "fail");
+        return "";
+    }
 
     let res = null;
     try {
@@ -45,10 +49,13 @@ async function downloadWithFetch(url, {
         lifeCycle.afterEachDownload(url, "success");
     } catch (error) {
         debug(error);
-        lifeCycle.afterEachDownload(url, "fail");
+        lifeCycle.afterEachDownload(url, "retry");
+        return downloadWithFetch(url, {
+            timeout,
+            retry: retry + 1
+        });
     }
-    if (res) return decodeHtmlBuffer(res.headers.get("content-type"), await res.buffer());
-    else return "";
+    return decodeHtmlBuffer(res.headers.get("content-type"), await res.buffer());
 }
 
 /**
@@ -84,9 +91,15 @@ function decodeHtmlBuffer(content_type, buf) {
 
 
 async function downloadWithJsDom(url, {
-    timeout = 3000
+    timeout = 3000,
+    retry = 0 // 重试次数
 } = {}) {
-    debug(`before download url ${url} use jsdom`);
+    debug(`download url ${url} use jsdom retry = ${retry}`);
+    if (retry >= MAX_RETRY) {
+        lifeCycle.afterEachDownload(url, "fail");
+        return "";
+    }
+
     const virtualConsole = new jsdom.VirtualConsole();
     virtualConsole.on("error", debug);
     virtualConsole.on("warn", debug);
@@ -115,8 +128,11 @@ async function downloadWithJsDom(url, {
             if (timeout && timeout !== -1) {
                 timer = setTimeout(() => {
                     debug(`jsdom load resource timeout after ${timeout} reject error`);
-                    lifeCycle.afterEachDownload(url, "fail");
-                    return reject(`Error: jsdom timeout after ${timeout}`);
+                    lifeCycle.afterEachDownload(url, "retry");
+                    return downloadWithJsDom(url, {
+                        timeout,
+                        retry: retry + 1
+                    });
                 }, timeout);
             }
         });
@@ -128,9 +144,15 @@ async function downloadWithJsDom(url, {
 
 
 async function downloadWithPuppeteer(url, {
-    timeout = 30000
+    timeout = 30000,
+    retry = 0 // 重试次数
 } = {}) {
-    debug(`before download url ${url} use puppeteer`);
+    debug(`download url ${url} use puppeteer retry = ${retry}`);
+    if (retry >= MAX_RETRY) {
+        lifeCycle.afterEachDownload(url, "fail");
+        return "";
+    }
+
     const browser = await puppeteer.launch();
     try {
         const page = await browser.newPage();
@@ -145,8 +167,11 @@ async function downloadWithPuppeteer(url, {
         return await page.content();
     } catch (error) {
         debug(`download use puppeteer have some error = ${error}`);
-        lifeCycle.afterEachDownload(url, "fail");
-        throw error;
+        lifeCycle.afterEachDownload(url, "retry");
+        return downloadWithPuppeteer(url, {
+            timeout,
+            retry: retry + 1
+        });
     } finally {
         await browser.close();
     }

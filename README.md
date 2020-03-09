@@ -198,7 +198,7 @@ LIMIT 3
 ### 下载过程
 
 * beforeEachDownload(url, engine)
-* afterEachDownload(url, status, html) -> status: `success`/`fail`
+* afterEachDownload(url, status, html) -> status: `success`/`retry`(触发重试)/`fail`(重试到达上限仍然失败)
 
 [更多语法参考](docs/grammer.md)
 
