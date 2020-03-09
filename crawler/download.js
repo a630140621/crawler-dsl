@@ -1,4 +1,4 @@
-const debug = require("debug")("cql:download");
+const debug = require("debug")("crawler:download");
 const puppeteer = require("puppeteer");
 const fetch = require("node-fetch"); // https://www.npmjs.com/package/node-fetch
 const htmlEncodingSniffer = require("html-encoding-sniffer"); // whatwg 标准解码嗅探算法
