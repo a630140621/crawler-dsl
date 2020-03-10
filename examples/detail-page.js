@@ -56,3 +56,43 @@ FROM
 //         ]
 //     }
 // ]
+
+
+// 子查询
+crawl(`
+    SELECT 
+        text($(".heading1 h1")) AS title,
+        text($(".visited_parent +")) AS pubdate
+    FROM (
+        SELECT
+            href($$(".tit a"))
+        FROM
+            https://cang.cngold.org/sczx/
+    )
+`).then(res => {
+    console.log(JSON.stringify(res, null, 4));
+}).catch(console.error);
+// [
+//     {
+//         "url": "https://cang.cngold.org/c/2020-03-10/c6896908.html",
+//         "select": {
+//             "title": "金华7个历史文化村落被列入第八批省历史文化重点村落项目名单",
+//             "pubdate": "2020-3-10 11:50:19"
+//         }
+//     },
+//     {
+//         "url": "https://cang.cngold.org/c/2020-03-10/c6896886.html",
+//         "select": {
+//             "title": "海量文博资源在线 “云看展”“云直播”不分国界",
+//             "pubdate": "2020-3-10 11:49:24"
+//         }
+//     },
+//     {
+//         "url": "https://cang.cngold.org/c/2020-03-10/c6896869.html",
+//         "select": {
+//             "title": "沿黄九省区博物馆联合推出的“云探国宝”活动 引发格外关注",
+//             "pubdate": "2020-3-10 11:46:53"
+//         }
+//     },
+//     ...
+// ]
