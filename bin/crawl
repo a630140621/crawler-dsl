@@ -1,13 +1,31 @@
 #! /usr/bin/env node
 
+const fs = require("fs");
+const path = require("path");
+const crawl = require("../index").crawl;
+const lifeCycle = require("../index").lifeCycle;
 const argv = require("yargs")
     .usage("Usage: $0 <command> [options]")
     .example("$0 --cql 'SELECT text(css('h1')) AS title FROM https://news.163.com/20/0217/13/F5JDV8GD000189FH.html'")
-    // .example("$0 --select 'text(css('h1')) AS title' --url https://news.163.com/20/0217/13/F5JDV8GD000189FH.html")
     .option("cql", {
         describe: "use cql to crawl specify url",
         required: true,
         nargs: 1
+    })
+    .option("f", {
+        alias: "format",
+        describe: "specify what format to output",
+        choices: ["json", "csv"],
+        default: "json"
+    })
+    .option("o", {
+        alias: "output",
+        describe: "specify file to save",
+        nargs: 1
+    })
+    .option("exclude", {
+        describe: "exclude other field only show select clause",
+        type: "boolean"
     })
     .help("h")
     .alias("h", "help")
@@ -15,9 +33,59 @@ const argv = require("yargs")
     .argv;
 
 
-const crawl = require("../crawler/index");
+function isFileExist(file) {
+    return new Promise((resolve, reject) => {
+        fs.access(file, fs.constants.F_OK, err => {
+            if (err) resolve(false);
+            else resolve(true);
+        });
+    });
+}
 
-crawl(argv.cql).then(ret => {
-    console.log(JSON.stringify(ret, null, 4));
+async function main() {
+    if (argv.output && await isFileExist(argv.output)) throw new Error(`file ${path.join(argv.output)} have already exist`);
+
+    let is_write_header = false;
+    lifeCycle.afterEachCrawl = async function (url, status, select) {
+        console.log(`crawl url ${url} status = ${status}`);
+        if (!is_write_header && argv.output && argv.format === "csv") {
+            is_write_header = true;
+            console.log(Object.keys(select));
+            await saveCSVHeader(Object.keys(select));
+        }
+        console.log(Object.values(select));
+        if (argv.output && argv.format === "csv") await saveCSVEachRow(Object.values(select));
+    };
+
+    let ret = await crawl(argv.cql);
+    if (argv.format === "json") await saveAsJSON(ret);
     process.exit();
-}).catch(console.error);
+}
+
+function saveCSVHeader(headers = []) {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(argv.output, headers.join(",") + "\n", "utf8", resolve);
+    });
+}
+
+async function saveCSVEachRow(row = []) {
+    return new Promise(resolve => {
+        fs.writeFile(argv.output, row.join(",") + "\n", {
+            encoding: "utf8",
+            flag: "a"
+        }, resolve);
+    });
+}
+
+async function saveAsJSON(json) {
+    return new Promise(resolve => {
+        fs.writeFile(argv.output, JSON.stringify(json, null, 4), "utf8", resolve);
+    });
+}
+
+main().then(() => {
+    process.exit();
+}).catch(error => {
+    console.log(error);
+    process.exit(1);
+});
