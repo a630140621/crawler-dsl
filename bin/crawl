@@ -58,7 +58,7 @@ async function main() {
     };
 
     let ret = await crawl(argv.cql);
-    if (argv.format === "json") await saveAsJSON(ret);
+    if (argv.format === "json" && argv.output) await saveAsJSON(ret);
     process.exit();
 }
 
