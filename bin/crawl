@@ -53,7 +53,7 @@ async function main() {
             console.log(Object.keys(select));
             await saveCSVHeader(Object.keys(select));
         }
-        console.log(Object.values(select));
+        console.log(JSON.stringify(select, null, 4));
         if (argv.output && argv.format === "csv") await saveCSVEachRow(Object.values(select));
     };
 
