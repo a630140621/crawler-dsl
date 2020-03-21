@@ -56,7 +56,7 @@ async function crawl(cql) {
             };
             item["select"] = extract(html, select_script, url);
             ret.push(item);
-            lifeCycle.afterEachCrawl(url, html ? "success" : "fail", item["select"]);
+            await lifeCycle.afterEachCrawl(url, html ? "success" : "fail", item["select"]);
         }
     } else { // 有 NEXT URL 子句情况下
         for (let url of urls) {
@@ -69,7 +69,7 @@ async function crawl(cql) {
                 url,
                 select: extract(html, select_script, url)
             });
-            lifeCycle.afterEachCrawl(url, html ? "success" : "fail", ret[ret.length - 1]["select"]);
+            await lifeCycle.afterEachCrawl(url, html ? "success" : "fail", ret[ret.length - 1]["select"]);
 
             // 进行 NEXT URL 处理
             let next_url_list = getNextUrl(url, html, NEXT_URL);
@@ -85,7 +85,7 @@ async function crawl(cql) {
                 debug(`continue NEXT URL clause download ${next_url}`);
                 let next_html = await download(next_url, options);
                 let next_select = extract(next_html, select_script, next_url);
-                lifeCycle.afterEachCrawl(next_url, next_html ? "success" : "fail", next_select);
+                await lifeCycle.afterEachCrawl(next_url, next_html ? "success" : "fail", next_select);
                 if (merge.length === 0) { // 不需要合并
                     ret.push({
                         url: next_url,

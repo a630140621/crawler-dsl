@@ -4,7 +4,7 @@ class LifeCycle {
     // * beforeEachCrawl(url) -> 每一个具体的抓取前，__如果返回 false，则不抓取该地址__（会忽略除 `false` 之外的任何值）；
     async beforeEachCrawl(url) {}
     // * afterEachCrawl(url, status, select) -> 每一个链接抓取结束，status 表示抓取状态（`success`/`fail`），select 为抓取的内容；
-    afterEachCrawl(url, status, select) {}
+    async afterEachCrawl(url, status, select) {}
     // * afterCrawl(results) -> 一条语句执行完毕（`results`:`[{url: "", select: {}, status: ""}]`）；
     // afterCrawl(results) {}
 
