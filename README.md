@@ -182,7 +182,16 @@ LIMIT 3
 
 > 如果有一些地址需要同步抓取，则也可以使用 `NEXT URL`
 
-## lifecycle
+## 下载缓存
+
+每一次运行过程中会将下载下来的 html 的实际内容保存在 临时文件夹下 `/tmp/download/hostname/file`
+
+* 当第二次下载时，如果发现文件已过期（暂写死一小时），则会进行重新下载；
+* 否则直接获取临时文件的内容。
+
+> 暂时没有删除保存的缓存文件。
+
+## lifeCycle
 
 爬虫抓取过程生命周期。
 
@@ -199,6 +208,8 @@ LIMIT 3
 
 * beforeEachDownload(url, engine)
 * afterEachDownload(url, status, html) -> status: `success`/`retry`(触发重试)/`fail`(重试到达上限仍然失败)
+
+如果该 url 内容是从缓存中获取的，将不会触发上述两个生命周期函数。
 
 [更多语法参考](docs/grammer.md)
 

@@ -5,6 +5,10 @@ const htmlEncodingSniffer = require("html-encoding-sniffer"); // whatwg 标准�
 const whatwgEncoding = require("whatwg-encoding"); // 构建在 iconv-lite 之上，使其符合 whatwg 规范
 const jsdom = require("jsdom");
 const lifeCycle = require("./lifecycle");
+const os = require("os");
+const path = require("path");
+const URL = require("url").URL;
+const fsPromise = require("fs").promises;
 
 
 const USERAGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36";
@@ -14,21 +18,30 @@ module.exports = async function (url, {
     timeout = 30000, // 30s 超时
     engine = ""
 } = {}) {
+    let tmp_html = await getHtmlFromTemp(url);
+    if (tmp_html) {
+        debug(`get url content from temp`);
+        return tmp_html;
+    }
     debug(`download url = ${url} with timeout = ${timeout}`);
     lifeCycle.beforeEachDownload(url, engine || "fetch");
     let options = {
         timeout
     };
+
+    let html;
     if (!engine || engine === "fetch") {
-        return await downloadWithFetch(url, options);
+        html = await downloadWithFetch(url, options);
     } else if (engine === "puppeteer") {
-        return await downloadWithPuppeteer(url, options);
+        html = await downloadWithPuppeteer(url, options);
     } else if (engine === "jsdom") {
-        return await downloadWithJsDom(url, options);
+        html = await downloadWithJsDom(url, options);
     } else {
         debug(`do not support engine 【${engine}】`);
         throw new Error(`do not support engine 【${engine}】`);
     }
+    await saveFileToTemp(url, html); // 不需要 await
+    return html;
 };
 
 async function downloadWithFetch(url, {
@@ -174,5 +187,55 @@ async function downloadWithPuppeteer(url, {
         });
     } finally {
         await browser.close();
+    }
+}
+
+
+// 下述两个函数考虑提取到 lib/
+// 将下载下来的内容保存到临时目录
+async function saveFileToTemp(url, html) {
+    let _url = new URL(url);
+    let temp_dir = path.join(`${os.tmpdir()}`, "download", _url.hostname);
+    try {
+        let filename = _url.pathname.split("/").slice(-1)[0];
+        await fsPromise.writeFile(path.join(temp_dir, filename), html, {
+            encoding: "utf8"
+        });
+    } catch (error) {
+        debug(error);
+        // 使用异常避免每次都要判断文件夹是否存在
+        if (error.code === "ENOENT") { // 无此文件或目录
+            await fsPromise.mkdir(temp_dir, {
+                recursive: true
+            });
+
+            return saveFileToTemp(url, html);
+        }
+
+        throw error;
+    }
+}
+
+// 若返回空字符串则表示尚无缓存，或缓存已过期，需重新下载
+async function getHtmlFromTemp(url) {
+    let _url = new URL(url);
+    let temp_dir = path.join(`${os.tmpdir()}`, "download", _url.hostname);
+    try {
+        let filename = _url.pathname.split("/").slice(-1)[0];
+        let filehanlde = await fsPromise.open(path.join(temp_dir, filename), "r");
+        let filestat = await filehanlde.stat();
+        if (Date.now() - 60 * 60 * 1000 > filestat.ctimeMs) { // N分钟之前的文件，当做已过期
+            // 暂不考虑删除过期文件
+            return "";
+        }
+        return await filehanlde.readFile({
+            encoding: "utf8"
+        });
+    } catch (error) {
+        debug(error);
+        // 使用异常避免每次都要判断文件夹是否存在
+        if (error.code === "ENOENT") { // 无此文件或目录
+            return "";
+        }
     }
 }
